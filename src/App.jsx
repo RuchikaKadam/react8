@@ -1,35 +1,90 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
+import SubjectDetails from './components/SubjectDetails';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [subject, setSubject] = useState("");
+  const [hour, setHour] = useState(0);
+  const [subjects, setSubjects] = useState([]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let copyArr = [...subjects];
+    copyArr.push({
+      subject: subject,
+      hour: parseInt(hour),
+    });
+    setSubjects(copyArr);
+    setSubject(""); // Clear input field
+    setHour(0); // Clear input field
+  };
+
+  const increaseHour = (index) => {
+    let copyArr = [...subjects];
+    copyArr[index].hour += 1;
+    setSubjects(copyArr);
+  };
+
+  const decreaseHour = (index) => {
+    let copyArr = [...subjects];
+    if (copyArr[index].hour > 1) {
+      copyArr[index].hour -= 1;
+    } else {
+      const confirmDeletion = window.confirm(`Do you want to delete ${copyArr[index].subject}?`);
+      if (confirmDeletion) {
+        copyArr.splice(index, 1); // Remove the item from the array
+      }
+    }
+    setSubjects(copyArr);
+  };
+
+  useEffect(() => {
+    if (subjects.length > 0)
+      localStorage.setItem("subject", JSON.stringify(subjects));
+  }, [subjects]);
+
+  // To save the data even after you refresh
+  useEffect(() => {
+    if (localStorage.getItem("subject")) {
+      let array = JSON.parse(localStorage.getItem("subject"));
+      setSubjects(array);
+    }
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app-container">
+      <h1>Your Education Planner</h1>
+      <p>Plan your studies with us!</p>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          required
+          onChange={(e) => setSubject(e.currentTarget.value)}
+          value={subject}
+          type="text"
+          placeholder="Subject"
+        />
+        <input
+          required
+          onChange={(e) => setHour(e.currentTarget.value)}
+          value={hour}
+          type="number"
+          placeholder="Hours"
+        />
+        <input type="submit" value="Add" />
+      </form>
+
+      {subjects.map((item, index) => (
+        <SubjectDetails
+          key={index}
+          increase={() => increaseHour(index)}
+          decrease={() => decreaseHour(index)}
+          subject={item.subject}
+          hour={item.hour}
+        />
+      ))}
+    </div>
+  );
 }
 
-export default App
+export default App;
